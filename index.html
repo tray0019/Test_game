@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#090b16"><title>Neon Dodge</title>
+<style>*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:#090b16;font-family:system-ui,-apple-system,sans-serif;color:#fff;touch-action:none;-webkit-user-select:none;user-select:none}canvas{display:block;width:100vw;height:100vh}#ui{position:fixed;top:max(18px,env(safe-area-inset-top));left:0;right:0;text-align:center;font-weight:800;font-size:22px;pointer-events:none}#msg{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px}.card{background:#10152de8;padding:26px;border-radius:22px;max-width:330px;box-shadow:0 12px 40px #0008;border:1px solid #ffffff22}.title{font-size:32px;font-weight:900}small{opacity:.75}</style></head>
+<body><canvas id="c"></canvas><div id="ui">Score: <span id="score">0</span></div><div id="msg"><div class="card"><div class="title">NEON DODGE</div><p>Drag your finger to move the glowing orb.<br>Avoid the falling blocks.</p><small>Tap anywhere to start</small></div></div>
+<script>
+const c=document.querySelector('#c'),ctx=c.getContext('2d'),msg=document.querySelector('#msg'),scoreEl=document.querySelector('#score');let W,H,dpr,p,obs,score,running=false,last,spawn;
+function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';ctx.setTransform(dpr,0,0,dpr,0,0)}addEventListener('resize',resize);resize();
+function reset(){p={x:W/2,y:H*.82,r:20};obs=[];score=0;spawn=.5;last=performance.now();scoreEl.textContent='0'}
+function start(){reset();running=true;msg.style.display='none';requestAnimationFrame(loop)}
+function move(x,y){if(!running)return;p.x=Math.max(p.r,Math.min(W-p.r,x));p.y=Math.max(65,Math.min(H-p.r,y))}
+addEventListener('pointerdown',e=>{if(!running)start();else move(e.clientX,e.clientY)});addEventListener('pointermove',e=>{if(e.pointerType==='touch'||e.buttons)move(e.clientX,e.clientY)});
+function loop(t){if(!running)return;const dt=Math.min(.035,(t-last)/1000);last=t;spawn-=dt;if(spawn<=0){const s=25+Math.random()*44;obs.push({x:Math.random()*(W-s),y:-s,s,v:190+score*3+Math.random()*130});spawn=Math.max(.17,.55-score*.007)}
+const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#101633');g.addColorStop(1,'#060711');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);ctx.shadowBlur=22;ctx.shadowColor='#4ff';ctx.fillStyle='#4ff';ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+for(let i=obs.length-1;i>=0;i--){const o=obs[i];o.y+=o.v*dt;ctx.fillStyle='#ff3b72';ctx.fillRect(o.x,o.y,o.s,o.s);const cx=Math.max(o.x,Math.min(p.x,o.x+o.s)),cy=Math.max(o.y,Math.min(p.y,o.y+o.s));if((p.x-cx)**2+(p.y-cy)**2<p.r**2){running=false;msg.innerHTML='<div class="card"><div class="title">GAME OVER</div><p>Score: '+score+'</p><small>Tap anywhere to play again</small></div>';msg.style.display='flex';return}if(o.y>H+o.s){obs.splice(i,1);score++;scoreEl.textContent=score}}
+requestAnimationFrame(loop)}reset();
+</script></body></html>
